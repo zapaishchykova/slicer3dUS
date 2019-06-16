@@ -1,4 +1,4 @@
-# Slicer 3d US - Fast registration
+# Slicer3D - Fast registration
 Module for fast US 3d spatial registration 
 
 ### Prerequisites
