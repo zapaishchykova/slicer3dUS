@@ -9,7 +9,7 @@ Module for fast US 3d spatial registration
 
 ### Installing
 
-[Tutuorial](https://www.slicer.org/w/images/0/0f/Slicer4_ProgrammingTutorial_SPujol-SPieper.pdf)
+[Tutorial](https://www.slicer.org/w/images/0/0f/Slicer4_ProgrammingTutorial_SPujol-SPieper.pdf)
 1. Select Module Settings from the Edit -> Application Settings Dialog 
 2. Open the side panel and click "Add"
 3. Add the path to the directory containing USRegistration.py
