@@ -69,6 +69,12 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout.addWidget(addNeedleModelButton)
     addNeedleModelButton.connect('clicked(bool)', self.onAddNeedleModelClicked)
 
+    # tranform button
+    addTransformButton = qt.QPushButton("Change transform")
+    addTransformButton.toolTip = "Change hierarchy order"
+    parametersFormLayout.addWidget(addTransformButton)
+    addTransformButton.connect('clicked(bool)', self.onTransformClicked)
+
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -91,6 +97,11 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   def onAddNeedleModelClicked(self):
     logic = ModuleLogic()
     result = logic.addNeedleModel()
+    qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
+
+  def onTransformClicked(self):
+    logic = ModuleLogic()
+    result = logic.transformation()
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
@@ -137,14 +148,20 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
     return "Needle Model created!"
 
+  def transformation(self):
+    trackerToProbeNode = slicer.util.getNode("volume3-TrackerToProbe")
+    stylusToTrackerNode = slicer.util.getNode("volume3-StylusToTracker")
+    stylusTipToStylusNode = slicer.util.getNode("volume3-StylusTipToStylus")
+    needleModelNode = slicer.util.getNode("NeedleModel_1")
+
+    needleModelNode.SetAndObserveTransformNodeID(stylusTipToStylusNode.GetID())
+    stylusTipToStylusNode.SetAndObserveTransformNodeID(stylusToTrackerNode.GetID())
+    stylusToTrackerNode.SetAndObserveTransformNodeID(trackerToProbeNode.GetID())
+
+    return "Transformation matrices configured!"
+
 
 '''
-sceneItemID = shn.GetSceneItemID()
-shn = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-subjectItemID = shn.GetItemChildWithName(sceneItemID, 'volume3-TrackerToProbe')
-subjectItemID2 = shn.GetItemChildWithName(sceneItemID, 'NeedleModel_1')
-shn.SetItemParent(subjectItemID,subjectItemID2)
-
 fiduciaReg = slicer.modules.fiducialregistration
 '''
 
