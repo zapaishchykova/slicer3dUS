@@ -1,4 +1,4 @@
-# coding: utf-8 
+# coding: utf-8
 import os
 import unittest
 import vtk, qt, ctk, slicer
@@ -122,25 +122,31 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
   def addNeedleModel(self):
     scene = slicer.mrmlScene
+    e = vtk.vtkImageEllipsoidSource()
 
     # Create model node
-    model = slicer.vtkMRMLModelNode()
+    logic = slicer.modules.createmodels.logic()
+    model = logic.CreateNeedle(80, 1, 2.5, True)
     model.SetScene(scene)
     model.SetName(scene.GenerateUniqueName("NeedleModel"))
 
-    planeSource = vtk.vtkPlaneSource()
-    model.SetAndObservePolyData(planeSource.GetOutput())
-
-    # Create display node
-    modelDisplay = slicer.vtkMRMLModelDisplayNode()
-    modelDisplay.SetColor(1, 1, 0)  # yellow
-    modelDisplay.SetBackfaceCulling(0)
-    modelDisplay.SetScene(scene)
-    scene.AddNode(modelDisplay)
-    scene.AddNode(model)
+    # Add to scene
+    model.GetDisplayNode().SetSliceIntersectionVisibility(True)
+    model.GetDisplayNode().SetSliceIntersectionThickness(3)
+    model.GetDisplayNode().SetColor(1, 1, 0)
 
     return "Needle Model created!"
 
+
+'''
+sceneItemID = shn.GetSceneItemID()
+shn = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+subjectItemID = shn.GetItemChildWithName(sceneItemID, 'volume3-TrackerToProbe')
+subjectItemID2 = shn.GetItemChildWithName(sceneItemID, 'NeedleModel_1')
+shn.SetItemParent(subjectItemID,subjectItemID2)
+
+fiduciaReg = slicer.modules.fiducialregistration
+'''
 
 class ModuleTest(ScriptedLoadableModuleTest):
   """
