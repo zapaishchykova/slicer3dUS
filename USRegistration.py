@@ -75,6 +75,32 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout.addWidget(addTransformButton)
     addTransformButton.connect('clicked(bool)', self.onTransformClicked)
 
+    # configure fiducials button
+    configureFidButton = qt.QPushButton("Configure fiducial wizard")
+    configureFidButton.toolTip = "Configue fiducials"
+    parametersFormLayout.addWidget(configureFidButton)
+    configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
+
+    #fiducial From buttons
+    imageF = slicer.qSlicerMarkupsPlaceWidget()
+    imageF.setMRMLScene(slicer.mrmlScene)
+    markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageF')
+    imageF.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
+    imageF.placeButton().show()
+    imageF.show()
+    parametersFormLayout.addWidget(imageF)
+
+    #fiducial To buttons
+
+    '''
+    imageT = slicer.qSlicerMarkupsPlaceWidget()
+    imageT.setMRMLScene(slicer.mrmlScene)
+    markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageT')
+    imageT.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
+    imageT.placeButton().show()
+    imageT.show()
+    parametersFormLayout.addWidget(imageT)
+    '''
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -82,6 +108,8 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     self.extendButton = extendButton
     self.loadButton = loadButton
     self.addNeedleModelButton = addNeedleModelButton
+    self.addTransformButton = addTransformButton
+    self.configureFidButton = configureFidButton
 
 
   def onExtendButtonClicked(self):
@@ -102,6 +130,11 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   def onTransformClicked(self):
     logic = ModuleLogic()
     result = logic.transformation()
+    qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
+
+  def onconfigFiducialClicked(self):
+    logic = ModuleLogic()
+    result = logic.configureFid()
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
@@ -160,9 +193,69 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
     return "Transformation matrices configured!"
 
+  def configureFid(self):
+    '''
+    fromFids = slicer.vtkMRMLMarkupsFiducialNode()
+    fromFids.SetName('ImageF')
+    slicer.mrmlScene.AddNode(fromFids)
+    '''
+    toFids = slicer.vtkMRMLMarkupsFiducialNode()
+    toFids.SetName('ProbeF')
+    slicer.mrmlScene.AddNode(toFids)
+
+    imageToProbe = slicer.vtkMRMLLinearTransformNode()
+    imageToProbe.SetName('ImageToProbe')
+    slicer.mrmlScene.AddNode(imageToProbe)
+    imageToProbe.SetModeToSimilarity()
+    imageToProbe.Update()
+
+    '''
+    landmarkTransform = vtk.vtkLandmarkTransform()
+    landmarkTransform.SetSourceLandmarks(fromFids)
+    landmarkTransform.SetTargetLandmarks(toFids)
+    landmarkTransform.SetModeToSimilarity()
+    landmarkTransform.Update()
+    
+fromFids = slicer.vtkMRMLMarkupsFiducialNode()
+fromFids.SetName('ImageF')
+fromFids.SetMarkupLabelFormat("ImageF")
+slicer.mrmlScene.AddNode(fromFids)
+
+toFids = slicer.vtkMRMLMarkupsFiducialNode()
+toFids.SetName('ProbeF')
+toFids.SetMarkupLabelFormat("ProbeF")
+slicer.mrmlScene.AddNode(toFids)
+
+imageToProbe = slicer.vtkMRMLLinearTransformNode()
+imageToProbe.SetName('ImageToProbe')
+slicer.mrmlScene.AddNode(imageToProbe)
+    '''
+
+    return "Fiducial Wizard Configured!"
 
 '''
-fiduciaReg = slicer.modules.fiducialregistration
+https://gist.github.com/zapaishchykova/499d9c385439b7103f1c0fe2ba869b29
+
+fiduciaReg = slicer.modules.fiducialregistrationwizard
+fidLog = fiduciaReg.logic()
+
+#navigate to module
+slicer.util.mainWindow().moduleSelector().selectModule('FiducialRegistrationWizard')
+
+#configure fiducials
+fromFids = slicer.vtkMRMLMarkupsFiducialNode()
+fromFids.SetName('ImageF')
+slicer.mrmlScene.AddNode(fromFids)
+
+#Add a button to module GUI to activate fiducial placement
+w=slicer.qSlicerMarkupsPlaceWidget()
+w.setMRMLScene(slicer.mrmlScene)
+markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode()
+w.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
+# Hide all buttons and only show place button
+#w.buttonsVisible=False
+w.placeButton().show()
+w.show()
 '''
 
 class ModuleTest(ScriptedLoadableModuleTest):
