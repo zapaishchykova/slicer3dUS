@@ -42,10 +42,10 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     # Instantiate and connect widgets ...
 
     #
-    # Parameters Area
+    # Configuration Area
     #
     parametersCollapsibleButton = ctk.ctkCollapsibleButton()
-    parametersCollapsibleButton.text = "Parameters"
+    parametersCollapsibleButton.text = "Configuration"
     self.layout.addWidget(parametersCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -81,17 +81,34 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout.addWidget(configureFidButton)
     configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
 
-    #fiducial From buttons
+    #
+    # Fiducial Area
+    #
+    '''
+    fiducialCollapsibleButton = ctk.ctkCollapsibleButton()
+    fiducialCollapsibleButton.text = "Set up fiducial points"
+    self.layout.addWidget(fiducialCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    fiducialFormLayout = qt.QFormLayout(fiducialCollapsibleButton)
+
+    # Buttons for placing feducials
     imageF = slicer.qSlicerMarkupsPlaceWidget()
     imageF.setMRMLScene(slicer.mrmlScene)
     markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageF')
     imageF.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
     imageF.placeButton().show()
     imageF.show()
-    parametersFormLayout.addWidget(imageF)
+    fiducialFormLayout.addWidget(imageF)
 
-    #fiducial To buttons
-
+    #player buttons after it's loaded
+    browser = slicer.qMRMLSequenceBrowserPlayWidget()
+    browser.setMRMLScene(slicer.mrmlScene)
+    volume3 = slicer.util.getNode("volume3")
+    browser.setMRMLSequenceBrowserNode(volume3)
+    browser.show()
+    fiducialFormLayout.addWidget(browser)
+    '''
     '''
     imageT = slicer.qSlicerMarkupsPlaceWidget()
     imageT.setMRMLScene(slicer.mrmlScene)
@@ -120,6 +137,28 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   def onLoadButtonClicked(self):
     logic = ModuleLogic()
     result = logic.loading()
+    fiducialCollapsibleButton = ctk.ctkCollapsibleButton()
+    fiducialCollapsibleButton.text = "Set up fiducial points"
+    self.layout.addWidget(fiducialCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    fiducialFormLayout = qt.QFormLayout(fiducialCollapsibleButton)
+
+    # Buttons for placing feducials
+    imageF = slicer.qSlicerMarkupsPlaceWidget()
+    imageF.setMRMLScene(slicer.mrmlScene)
+    markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageF')
+    imageF.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
+    imageF.placeButton().show()
+    imageF.show()
+    fiducialFormLayout.addWidget(imageF)
+
+    # player buttons after it's loaded
+    browser = slicer.qMRMLSequenceBrowserToolBar()
+    browser.setMRMLScene(slicer.mrmlScene)
+    browser.show()
+    fiducialFormLayout.addWidget(browser)
+
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 
   def onAddNeedleModelClicked(self):
@@ -166,7 +205,6 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
   def addNeedleModel(self):
     scene = slicer.mrmlScene
-    e = vtk.vtkImageEllipsoidSource()
 
     # Create model node
     logic = slicer.modules.createmodels.logic()
