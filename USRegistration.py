@@ -153,6 +153,21 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     logic = ModuleLogic()
     result = logic.transformationImage()
 
+
+    #f = slicer.vtkMRMLFiducialRegistrationWizardNode()
+    f = slicer.util.selectModule('FiducialRegistrationWizard')
+    f = slicer.util.getNode('FiducialRegistrationWizard')
+    f.SetScene(slicer.mrmlScene)
+    f.SetRegistrationModeToSimilarity()
+
+    f.SetAndObserveFromFiducialListNodeId('vtkMRMLMarkupsFiducialNode1') #ImageF
+    f.SetAndObserveToFiducialListNodeId('vtkMRMLMarkupsFiducialNode2')  #ProbeT
+    f.RegistrationModeFromString('ImageToProbe')
+
+    f.SetOutputTransformNodeId('vtkMRMLLinearTransformNode9')
+    f.SetUpdateModeToAuto()
+    f.UpdateScene(slicer.mrmlScene)
+
     driver = slicer.modules.volumereslicedriver.logic()
     layoutManager = slicer.app.layoutManager()
     redView = layoutManager.layoutLogic().GetViewNodes().GetItemAsObject(0)
@@ -160,15 +175,7 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     driver.SetModeForSlice(6, redView)
     driver.SetDriverForSlice('vtkMRMLScalarVolumeNode1', redView)
 
-    fid = slicer.modules.fiducialregistrationwizard.logic()
-    imageToProbe = slicer.mrmlScene.GetFirstNodeByName("ImageToProbe")
-    needleModel = slicer.mrmlScene.GetFirstNodeByName("NeedleModel_1")
-    fid.SetMRMLScene(slicer.mrmlScene)
-    fid.UpdateCalibration(needleModel)
-
-    UpdateScene(vtkMRMLScene *)
-    f.SetScene(slicer.mrmlScene)
-
+    print("Final configuration matrix:")
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
