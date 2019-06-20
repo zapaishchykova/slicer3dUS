@@ -38,7 +38,8 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
 
   def setup(self):
     layoutManager = slicer.app.layoutManager()
-    layoutManager.setLayout(10)
+    #views = layoutManager.layoutLogic().GetViewNodes().GetItemAsObject(1)
+    layoutManager.setLayout(6)
 
     ScriptedLoadableModuleWidget.setup(self)
 
@@ -79,13 +80,13 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     addTransformButton.connect('clicked(bool)', self.onTransformClicked)
 
     # configure fiducials button
-    configureFidButton = qt.QPushButton("6. Place ProbeTo fiducial points")
+    configureFidButton = qt.QPushButton("6*. Place ProbeTo fiducial points")
     configureFidButton.toolTip = "Configue fiducials"
     parametersFormLayout.addWidget(configureFidButton)
     configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
 
     # tranform button
-    addTransformImageButton = qt.QPushButton("7. Change final transform")
+    addTransformImageButton = qt.QPushButton("8. Change final transform")
     addTransformImageButton.toolTip = "Change hierarchy order"
     parametersFormLayout.addWidget(addTransformImageButton)
     addTransformImageButton.connect('clicked(bool)', self.onTransformImageClicked)
@@ -110,7 +111,7 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     logic = ModuleLogic()
     result = logic.loading()
     fiducialCollapsibleButton = ctk.ctkCollapsibleButton()
-    fiducialCollapsibleButton.text = "6. Set up fiducial points"
+    fiducialCollapsibleButton.text = "5*. Set up fiducial points"
     self.layout.addWidget(fiducialCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -130,11 +131,6 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     browser.setMRMLScene(slicer.mrmlScene)
     browser.show()
     fiducialFormLayout.addWidget(browser)
-
-    driver = slicer.qSlicerReslicePropertyWidget()
-    driver.setMRMLScene(slicer.mrmlScene)
-    driver.show()
-    fiducialFormLayout.addWidget(driver)
 
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 
@@ -156,6 +152,23 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   def onTransformImageClicked(self):
     logic = ModuleLogic()
     result = logic.transformationImage()
+
+    driver = slicer.modules.volumereslicedriver.logic()
+    layoutManager = slicer.app.layoutManager()
+    redView = layoutManager.layoutLogic().GetViewNodes().GetItemAsObject(0)
+    driver.SetMRMLScene(slicer.mrmlScene)
+    driver.SetModeForSlice(6, redView)
+    driver.SetDriverForSlice('vtkMRMLScalarVolumeNode1', redView)
+
+    fid = slicer.modules.fiducialregistrationwizard.logic()
+    imageToProbe = slicer.mrmlScene.GetFirstNodeByName("ImageToProbe")
+    needleModel = slicer.mrmlScene.GetFirstNodeByName("NeedleModel_1")
+    fid.SetMRMLScene(slicer.mrmlScene)
+    fid.UpdateCalibration(needleModel)
+
+    UpdateScene(vtkMRMLScene *)
+    f.SetScene(slicer.mrmlScene)
+
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
@@ -227,6 +240,15 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
     imageModelNode = slicer.util.getNode("volume3-Image")
 
     imageModelNode.SetAndObserveTransformNodeID(imageToProbeNode.GetID())
+
+    w = slicer.vtkMRMLFiducialRegistrationWizardNode()
+    w.SetRegistrationModeToSimilarity()
+    imageToProbe = slicer.mrmlScene.GetFirstNodeByName("ImageToProbe")
+    w.SetProbeTransformToNodeId(imageToProbe.GetID())
+
+    slicer.modules.fiducialregistrationwizard.logic().UpdateCalibration(imageToProbe)
+    slicer.modules.fiducialregistrationwizard.logic().UpdateCalibration(w)
+
     return "Transformation matrices configured!"
 
   def configureFid(self):
@@ -251,7 +273,6 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
     fidTransform = slicer.mrmlScene.GetFirstNodeByName("volume3-StylusTipToStylus")
     toFids = slicer.mrmlScene.GetFirstNodeByName("ProbeT")
     slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
-
     return "Fiducial Wizard Configured!"
 
 
