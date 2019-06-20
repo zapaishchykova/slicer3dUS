@@ -22,7 +22,7 @@ class USRegistration(ScriptedLoadableModule):
     self.parent.categories = ["Examples"]
     self.parent.dependencies = []
     self.parent.contributors = ["Anna Zapaishchykova(TUM)"] # replace with "Firstname Lastname (Organization)"
-    self.parent.helpText = "This is the module for 3d spatial ultrasound registration"
+    self.parent.helpText = "This is the module for 3d spatial ultrasound registration. "
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
     self.parent.acknowledgementText = "PMSD course"
 
@@ -37,6 +37,9 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   """
 
   def setup(self):
+    layoutManager = slicer.app.layoutManager()
+    layoutManager.setLayout(10)
+
     ScriptedLoadableModuleWidget.setup(self)
 
     # Instantiate and connect widgets ...
@@ -52,72 +55,41 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
 
     # "Run extend.bat" button
-    extendButton = qt.QPushButton("Run extend.bat")
+    extendButton = qt.QPushButton("1. Run extend.bat")
     extendButton.toolTip = "Run configuration file"
     parametersFormLayout.addWidget(extendButton)
     extendButton.connect('clicked(bool)', self.onExtendButtonClicked)
 
     # loadSequence button
-    loadButton = qt.QPushButton("Load data")
+    loadButton = qt.QPushButton("2. Load data")
     loadButton.toolTip = "Load file"
     parametersFormLayout.addWidget(loadButton)
     loadButton.connect('clicked(bool)', self.onLoadButtonClicked)
 
     # loadSequence button
-    addNeedleModelButton = qt.QPushButton("Add needle model")
+    addNeedleModelButton = qt.QPushButton("3. Add needle model")
     addNeedleModelButton.toolTip = "Create Models module"
     parametersFormLayout.addWidget(addNeedleModelButton)
     addNeedleModelButton.connect('clicked(bool)', self.onAddNeedleModelClicked)
 
     # tranform button
-    addTransformButton = qt.QPushButton("Change transform")
+    addTransformButton = qt.QPushButton("4. Change transform")
     addTransformButton.toolTip = "Change hierarchy order"
     parametersFormLayout.addWidget(addTransformButton)
     addTransformButton.connect('clicked(bool)', self.onTransformClicked)
 
     # configure fiducials button
-    configureFidButton = qt.QPushButton("Configure fiducial wizard")
+    configureFidButton = qt.QPushButton("6. Place ProbeTo fiducial points")
     configureFidButton.toolTip = "Configue fiducials"
     parametersFormLayout.addWidget(configureFidButton)
     configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
 
-    #
-    # Fiducial Area
-    #
-    '''
-    fiducialCollapsibleButton = ctk.ctkCollapsibleButton()
-    fiducialCollapsibleButton.text = "Set up fiducial points"
-    self.layout.addWidget(fiducialCollapsibleButton)
+    # tranform button
+    addTransformImageButton = qt.QPushButton("7. Change final transform")
+    addTransformImageButton.toolTip = "Change hierarchy order"
+    parametersFormLayout.addWidget(addTransformImageButton)
+    addTransformImageButton.connect('clicked(bool)', self.onTransformImageClicked)
 
-    # Layout within the dummy collapsible button
-    fiducialFormLayout = qt.QFormLayout(fiducialCollapsibleButton)
-
-    # Buttons for placing feducials
-    imageF = slicer.qSlicerMarkupsPlaceWidget()
-    imageF.setMRMLScene(slicer.mrmlScene)
-    markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageF')
-    imageF.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
-    imageF.placeButton().show()
-    imageF.show()
-    fiducialFormLayout.addWidget(imageF)
-
-    #player buttons after it's loaded
-    browser = slicer.qMRMLSequenceBrowserPlayWidget()
-    browser.setMRMLScene(slicer.mrmlScene)
-    volume3 = slicer.util.getNode("volume3")
-    browser.setMRMLSequenceBrowserNode(volume3)
-    browser.show()
-    fiducialFormLayout.addWidget(browser)
-    '''
-    '''
-    imageT = slicer.qSlicerMarkupsPlaceWidget()
-    imageT.setMRMLScene(slicer.mrmlScene)
-    markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode('ImageT')
-    imageT.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
-    imageT.placeButton().show()
-    imageT.show()
-    parametersFormLayout.addWidget(imageT)
-    '''
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -138,7 +110,7 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     logic = ModuleLogic()
     result = logic.loading()
     fiducialCollapsibleButton = ctk.ctkCollapsibleButton()
-    fiducialCollapsibleButton.text = "Set up fiducial points"
+    fiducialCollapsibleButton.text = "6. Set up fiducial points"
     self.layout.addWidget(fiducialCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -159,6 +131,11 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     browser.show()
     fiducialFormLayout.addWidget(browser)
 
+    driver = slicer.qSlicerReslicePropertyWidget()
+    driver.setMRMLScene(slicer.mrmlScene)
+    driver.show()
+    fiducialFormLayout.addWidget(driver)
+
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 
   def onAddNeedleModelClicked(self):
@@ -174,6 +151,11 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
   def onconfigFiducialClicked(self):
     logic = ModuleLogic()
     result = logic.configureFid()
+    qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
+
+  def onTransformImageClicked(self):
+    logic = ModuleLogic()
+    result = logic.transformationImage()
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
@@ -229,72 +211,49 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
     stylusTipToStylusNode.SetAndObserveTransformNodeID(stylusToTrackerNode.GetID())
     stylusToTrackerNode.SetAndObserveTransformNodeID(trackerToProbeNode.GetID())
 
+    w = slicer.vtkMRMLFiducialRegistrationWizardNode()
+    w.SetRegistrationModeToSimilarity()
+    imageToProbe = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLinearTransformNode", "ImageToProbe")
+    w.SetProbeTransformToNodeId(imageToProbe.GetID())
+
+    fidTransform = slicer.mrmlScene.GetNodeByID('vtkMRMLLinearTransformNode6')
+    toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeT")
+    slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
+
+    return "Transformation matrices configured!"
+
+  def transformationImage(self):
+    imageToProbeNode = slicer.util.getNode("ImageToProbe")
+    imageModelNode = slicer.util.getNode("volume3-Image")
+
+    imageModelNode.SetAndObserveTransformNodeID(imageToProbeNode.GetID())
     return "Transformation matrices configured!"
 
   def configureFid(self):
     '''
-    fromFids = slicer.vtkMRMLMarkupsFiducialNode()
-    fromFids.SetName('ImageF')
-    slicer.mrmlScene.AddNode(fromFids)
+    w = slicer.vtkMRMLFiducialRegistrationWizardNode()
+    w.SetRegistrationModeToSimilarity()
+    w.SetProbeTransformToNodeId(transformNode.GetID())
+
+
+
+    fidReg = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLFiducialRegistrationWizardNode", "Fiducial")
+    toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeF")
     '''
-    toFids = slicer.vtkMRMLMarkupsFiducialNode()
-    toFids.SetName('ProbeF')
-    slicer.mrmlScene.AddNode(toFids)
 
-    imageToProbe = slicer.vtkMRMLLinearTransformNode()
-    imageToProbe.SetName('ImageToProbe')
-    slicer.mrmlScene.AddNode(imageToProbe)
-    imageToProbe.SetModeToSimilarity()
-    imageToProbe.Update()
+    #fromFids = slicer.mrmlScene.GetNodeByID('vtkMRMLMarkupsFiducialNode1')
+    # TODO: places only one to fields
+    w = slicer.vtkMRMLFiducialRegistrationWizardNode()
+    w.SetRegistrationModeToSimilarity()
+    imageToProbe = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLinearTransformNode", "ImageToProbe")
+    w.SetProbeTransformToNodeId(imageToProbe.GetID())
 
-    '''
-    landmarkTransform = vtk.vtkLandmarkTransform()
-    landmarkTransform.SetSourceLandmarks(fromFids)
-    landmarkTransform.SetTargetLandmarks(toFids)
-    landmarkTransform.SetModeToSimilarity()
-    landmarkTransform.Update()
-    
-fromFids = slicer.vtkMRMLMarkupsFiducialNode()
-fromFids.SetName('ImageF')
-fromFids.SetMarkupLabelFormat("ImageF")
-slicer.mrmlScene.AddNode(fromFids)
-
-toFids = slicer.vtkMRMLMarkupsFiducialNode()
-toFids.SetName('ProbeF')
-toFids.SetMarkupLabelFormat("ProbeF")
-slicer.mrmlScene.AddNode(toFids)
-
-imageToProbe = slicer.vtkMRMLLinearTransformNode()
-imageToProbe.SetName('ImageToProbe')
-slicer.mrmlScene.AddNode(imageToProbe)
-    '''
+    fidTransform = slicer.mrmlScene.GetNodeByID('vtkMRMLLinearTransformNode6')
+    toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeT")
+    slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
 
     return "Fiducial Wizard Configured!"
 
-'''
-https://gist.github.com/zapaishchykova/499d9c385439b7103f1c0fe2ba869b29
-
-fiduciaReg = slicer.modules.fiducialregistrationwizard
-fidLog = fiduciaReg.logic()
-
-#navigate to module
-slicer.util.mainWindow().moduleSelector().selectModule('FiducialRegistrationWizard')
-
-#configure fiducials
-fromFids = slicer.vtkMRMLMarkupsFiducialNode()
-fromFids.SetName('ImageF')
-slicer.mrmlScene.AddNode(fromFids)
-
-#Add a button to module GUI to activate fiducial placement
-w=slicer.qSlicerMarkupsPlaceWidget()
-w.setMRMLScene(slicer.mrmlScene)
-markupsNodeID = slicer.modules.markups.logic().AddNewFiducialNode()
-w.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNodeID))
-# Hide all buttons and only show place button
-#w.buttonsVisible=False
-w.placeButton().show()
-w.show()
-'''
 
 class ModuleTest(ScriptedLoadableModuleTest):
   """
