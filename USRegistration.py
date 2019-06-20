@@ -218,7 +218,7 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
     fidTransform = slicer.mrmlScene.GetNodeByID('vtkMRMLLinearTransformNode6')
     toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeT")
-    slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
+    #slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
 
     return "Transformation matrices configured!"
 
@@ -245,11 +245,11 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
     # TODO: places only one to fields
     w = slicer.vtkMRMLFiducialRegistrationWizardNode()
     w.SetRegistrationModeToSimilarity()
-    imageToProbe = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLinearTransformNode", "ImageToProbe")
+    imageToProbe = slicer.mrmlScene.GetFirstNodeByName("ImageToProbe")
     w.SetProbeTransformToNodeId(imageToProbe.GetID())
 
-    fidTransform = slicer.mrmlScene.GetNodeByID('vtkMRMLLinearTransformNode6')
-    toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeT")
+    fidTransform = slicer.mrmlScene.GetFirstNodeByName("volume3-StylusTipToStylus")
+    toFids = slicer.mrmlScene.GetFirstNodeByName("ProbeT")
     slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
 
     return "Fiducial Wizard Configured!"
