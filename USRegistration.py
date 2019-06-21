@@ -20,18 +20,16 @@ class USRegistration(ScriptedLoadableModule):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "Fast registration"
     self.parent.categories = ["Examples"]
-    #TODO: write dependencies and instruction
-    self.parent.dependencies = []
-    self.parent.contributors = ["Anna Zapaishchykova(TUM)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.dependencies = [] #["SlicerIGT", "Sequences"]
+    self.parent.contributors = ["Anna Zapaishchykova(TUM)"]  # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = "This is the module for 3d spatial ultrasound registration. "
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
-    self.parent.acknowledgementText = "PMSD course"
+    self.parent.acknowledgementText = "This module was made in PMSD course(TUM)"
+
 
 #
 # USRegistrationWidget
 #
-
-
 class USRegistrationWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
@@ -39,12 +37,9 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
 
   def setup(self):
     layoutManager = slicer.app.layoutManager()
-    #views = layoutManager.layoutLogic().GetViewNodes().GetItemAsObject(1)
     layoutManager.setLayout(6)
 
     ScriptedLoadableModuleWidget.setup(self)
-
-    # Instantiate and connect widgets ...
 
     #
     # Configuration Area
@@ -63,7 +58,7 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     extendButton.connect('clicked(bool)', self.onExtendButtonClicked)
 
     # loadSequence button
-    loadButton = qt.QPushButton("2. Load data")
+    loadButton = qt.QPushButton("2. Load volume3.mha")
     loadButton.toolTip = "Load file"
     parametersFormLayout.addWidget(loadButton)
     loadButton.connect('clicked(bool)', self.onLoadButtonClicked)
@@ -80,20 +75,6 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     parametersFormLayout.addWidget(addTransformButton)
     addTransformButton.connect('clicked(bool)', self.onTransformClicked)
 
-    # configure fiducials button
-    #TODO: make thois button small and place near button 5* with same subsection
-    #TODO: try to avoid this 6* button and make it work after 5*
-    configureFidButton = qt.QPushButton("6*. Place ProbeTo fiducial points")
-    configureFidButton.toolTip = "Configue fiducials"
-    parametersFormLayout.addWidget(configureFidButton)
-    configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
-
-    # tranform button
-    addTransformImageButton = qt.QPushButton("7. Change final transform")
-    addTransformImageButton.toolTip = "Change hierarchy order"
-    parametersFormLayout.addWidget(addTransformImageButton)
-    addTransformImageButton.connect('clicked(bool)', self.onTransformImageClicked)
-
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -102,7 +83,6 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     self.loadButton = loadButton
     self.addNeedleModelButton = addNeedleModelButton
     self.addTransformButton = addTransformButton
-    self.configureFidButton = configureFidButton
 
 
   def onExtendButtonClicked(self):
@@ -129,11 +109,24 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     imageF.show()
     fiducialFormLayout.addWidget(imageF)
 
+    #configure fid button
+    #TODO: try to avoid this 6* button and make it work after 5*
+    configureFidButton = qt.QPushButton("6*. Place ProbeTo fiducial points")
+    configureFidButton.toolTip = "Configue fiducials"
+    fiducialFormLayout.addWidget(configureFidButton)
+    configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
+
     # player buttons after it's loaded
     browser = slicer.qMRMLSequenceBrowserToolBar()
     browser.setMRMLScene(slicer.mrmlScene)
     browser.show()
     fiducialFormLayout.addWidget(browser)
+
+    # tranform button
+    addTransformImageButton = qt.QPushButton("7. Change final transform")
+    addTransformImageButton.toolTip = "Change hierarchy order"
+    fiducialFormLayout.addWidget(addTransformImageButton)
+    configureFidButton.connect('clicked(bool)', self.onTransformImageClicked)
 
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 
@@ -197,6 +190,7 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
   """
 
   def process(self):
+    # change the path selectable by user
     subprocess.call([r'D:\calibration_20190520\extend.bat'])
     return "Settings configured!"
 
@@ -242,8 +236,6 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
     fidTransform = slicer.mrmlScene.GetNodeByID('vtkMRMLLinearTransformNode6')
     toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeT")
-    #slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
-
     return "Transformation matrices configured!"
 
   def transformationImage(self):
@@ -259,22 +251,9 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
 
     slicer.modules.fiducialregistrationwizard.logic().UpdateCalibration(imageToProbe)
     slicer.modules.fiducialregistrationwizard.logic().UpdateCalibration(w)
-
     return "Transformation matrices configured!"
 
   def configureFid(self):
-    '''
-    w = slicer.vtkMRMLFiducialRegistrationWizardNode()
-    w.SetRegistrationModeToSimilarity()
-    w.SetProbeTransformToNodeId(transformNode.GetID())
-
-
-
-    fidReg = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLFiducialRegistrationWizardNode", "Fiducial")
-    toFids = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "ProbeF")
-    '''
-
-    #fromFids = slicer.mrmlScene.GetNodeByID('vtkMRMLMarkupsFiducialNode1')
     # TODO: places only one to fields
     w = slicer.vtkMRMLFiducialRegistrationWizardNode()
     w.SetRegistrationModeToSimilarity()
