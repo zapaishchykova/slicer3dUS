@@ -18,8 +18,9 @@ class USRegistration(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "Fast registration" # TODO make this more human readable by adding spaces
+    self.parent.title = "Fast registration"
     self.parent.categories = ["Examples"]
+    #TODO: write dependencies and instruction
     self.parent.dependencies = []
     self.parent.contributors = ["Anna Zapaishchykova(TUM)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = "This is the module for 3d spatial ultrasound registration. "
@@ -80,13 +81,15 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     addTransformButton.connect('clicked(bool)', self.onTransformClicked)
 
     # configure fiducials button
+    #TODO: make thois button small and place near button 5* with same subsection
+    #TODO: try to avoid this 6* button and make it work after 5*
     configureFidButton = qt.QPushButton("6*. Place ProbeTo fiducial points")
     configureFidButton.toolTip = "Configue fiducials"
     parametersFormLayout.addWidget(configureFidButton)
     configureFidButton.connect('clicked(bool)', self.onconfigFiducialClicked)
 
     # tranform button
-    addTransformImageButton = qt.QPushButton("8. Change final transform")
+    addTransformImageButton = qt.QPushButton("7. Change final transform")
     addTransformImageButton.toolTip = "Change hierarchy order"
     parametersFormLayout.addWidget(addTransformImageButton)
     addTransformImageButton.connect('clicked(bool)', self.onTransformImageClicked)
@@ -176,6 +179,7 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     driver.SetDriverForSlice('vtkMRMLScalarVolumeNode1', redView)
 
     print("Final configuration matrix:")
+    #TODO: print here final matrix
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 #
 # ModuleLogic
