@@ -126,8 +126,20 @@ class USRegistrationWidget(ScriptedLoadableModuleWidget):
     addTransformImageButton = qt.QPushButton("7. Change final transform")
     addTransformImageButton.toolTip = "Change hierarchy order"
     fiducialFormLayout.addWidget(addTransformImageButton)
-    configureFidButton.connect('clicked(bool)', self.onTransformImageClicked)
+    addTransformImageButton.connect('clicked(bool)', self.onTransformImageClicked)
 
+    # save button
+    saveButton = qt.QPushButton("8. Save")
+    saveButton.toolTip = "Save to Slicer path"
+    fiducialFormLayout.addWidget(saveButton)
+    saveButton.connect('clicked(bool)', self.onSaveClicked)
+
+    qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
+
+
+  def onSaveClicked(self):
+    logic = ModuleLogic()
+    result = logic.saveMrml()
     qt.QMessageBox.information(slicer.util.mainWindow(), 'Slicer Python', result)
 
   def onAddNeedleModelClicked(self):
@@ -264,6 +276,18 @@ class ModuleLogic(ScriptedLoadableModuleLogic):
     toFids = slicer.mrmlScene.GetFirstNodeByName("ProbeT")
     slicer.modules.fiducialregistrationwizard.logic().AddFiducial(fidTransform, toFids)
     return "Fiducial Wizard Configured!"
+
+  def saveMrml(self):
+    slicer.util.saveScene(slicer.app.temporaryPath + '/Scene.mrml')
+    f = open(slicer.app.temporaryPath + '/Scene.mrml', "r")
+    contents = f.read()
+    before = contents.split("matrixTransformToParent")
+    if len(before) == 6:
+      mid = before[5]
+      after = mid.split("></LinearTransform>")[0]
+      return ("Linear transform: ", after[2:])
+    else:
+      return ("Was not able to fetch text, check manually: " + slicer.app.temporaryPath +  '/Scene.mrml')
 
 
 class ModuleTest(ScriptedLoadableModuleTest):
